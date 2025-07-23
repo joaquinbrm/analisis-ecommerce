@@ -2,15 +2,13 @@ import psycopg2
 import pandas as pd
 import os
 import time
-import dotenv
 
 #Credenciales de conexión
-dotenv.load_dotenv()
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_PORT = os.getenv("DB_PORT")
+DB_HOST = 'localhost'
+DB_NAME = 'ecommerce_db'
+DB_USER = 'postgres'
+DB_PASSWORD = 'ecommerceproject'
+DB_PORT = '5432'
 
 def conectar_db():
     """Conecta el script a la database.
@@ -48,7 +46,6 @@ def cargar_datos(path_carpeta : str):
     for root, directorios, archivos in os.walk(path_carpeta):
         for archivo in archivos:
             #Abrir archivo
-            nombre_tabla = os.path.splitext(archivo)[0]
             path_archivo = os.path.join(root, archivo)
             data_reader = pd.read_csv(path_archivo)
 
@@ -60,7 +57,7 @@ def cargar_datos(path_carpeta : str):
             for index, fila in data_reader.iterrows():
                 placeholders = ', '.join(['%s'] * len(fila)) #Tantos valores como columnas
                 columnas = ', '.join(fila.index)
-                query = f"INSERT INTO {nombre_tabla} ({columnas}) VALUES ({placeholders})"
+                query = f"INSERT INTO {archivo} ({columnas}) VALUES ({placeholders})"
 
                 cursor.execute(query, tuple(fila)) #Fila es una serie de pandas y el cursor requiere tuplas
 
@@ -69,12 +66,12 @@ def cargar_datos(path_carpeta : str):
             fin_cronometro = time.time()
 
             conexion.commit()
-            print(f"Se completó la carga de {filas_cargadas} filas para la tabla {nombre_tabla}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
+            print(f"Se completó la carga de {filas_cargadas} filas para la tabla {archivo}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
 
     #Cierre
     cursor.close()
     conexion.close()
-    print("Fin del proceso.")
+    print("Fin del proceso. Conexión cerrada.")
 
 if __name__ == "__main__":
     cargar_datos(".")
