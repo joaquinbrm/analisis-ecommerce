@@ -26,6 +26,19 @@ def conectar_db():
         password=DB_PASSWORD,
         port=DB_PORT)
 
+#Pandas lee como float las columnas que son timestamp. Se agrega el diccionario para evitar error de tipo.
+columnas_timestamp = { 'order': [
+        'order_purchase_timestamp',
+        'order_approved_at',
+        'order_delivered_carrier_date',
+        'order_delivered_customer_date',
+        'order_estimated_delivery_date'],
+                        'order_items': [
+        'shipping_limit_date'],
+                        'order_reviews' : [
+        'review_creation_date',
+        'review_answer_timestamp']}
+
 def cargar_datos(path_carpeta : str):
     """ Ingresa datos desde archivos csv a tablas en PostgreSQL.
 
@@ -59,6 +72,16 @@ def cargar_datos(path_carpeta : str):
                     data_reader = pd.read_csv(path_archivo)
                 except Exception as e:
                     print(f"Error al intentar leer el archivo {archivo}: {e}.")
+                    continue
+                
+                #Conversión de tipo
+                if nombre_tabla in columnas_timestamp:
+                    print(f"Corrigiendo tipos para la tabla: {nombre_tabla}")
+                    for columna in columnas_timestamp[nombre_tabla]:
+                        if columna in data_reader.columns:
+                            data_reader[columna] = pd.to_datetime(data_reader[columna])
+                        else:
+                            print(f" La columna '{columna}' no se encontró en '{archivo}'.")
 
                 #Monitoreo
                 num_filas = len(data_reader)
@@ -70,6 +93,7 @@ def cargar_datos(path_carpeta : str):
                 placeholders = ', '.join(['%s'] * len(data_reader.columns)) #Pasa tantos valores como columnas
                 query = f"INSERT INTO {nombre_tabla} ({columnas}) VALUES ({placeholders})"
 
+                #Inserción
                 try:
                     cursor.executemany(query, valores)
                     fin_cronometro = time.time()
