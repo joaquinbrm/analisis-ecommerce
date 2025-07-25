@@ -79,7 +79,7 @@ def cargar_datos(path_carpeta : str):
                     print(f"Corrigiendo tipos para la tabla: {nombre_tabla}")
                     for columna in columnas_timestamp[nombre_tabla]:
                         if columna in data_reader.columns:
-                            data_reader[columna] = pd.to_datetime(data_reader[columna])
+                            data_reader[columna] = pd.to_datetime(data_reader[columna], errors='coerce')
                         else:
                             print(f" La columna '{columna}' no se encontró en '{archivo}'.")
 
@@ -88,7 +88,7 @@ def cargar_datos(path_carpeta : str):
                 inicio_cronometro = time.time() 
 
                 #Generación de query
-                valores = [tuple(fila_valores) for fila_valores in data_reader.values] #Hace tupla (para psycopg2) cada fila de valores (arrays) en el dataset.
+                valores = list(data_reader.to_records(index=False)) #Hace tupla (para psycopg2) cada fila de valores (arrays) en el dataset.
                 columnas = ', '.join(data_reader.columns)
                 placeholders = ', '.join(['%s'] * len(data_reader.columns)) #Pasa tantos valores como columnas
                 query = f"INSERT INTO {nombre_tabla} ({columnas}) VALUES ({placeholders})"
