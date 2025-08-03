@@ -34,14 +34,13 @@ columnas_timestamp = {
 prioridad_carga_tablas = [
     'customers',
     'sellers',
-    'products', # Si order_items también depende de products
+    'products',
     'order_all',
     'order_items',
     'order_payments',
     'order_reviews', 
     'translations',  
     'geolocation'      
-    # Agrega cualquier otra tabla que tengas en tu carpeta de CSVs
 ]
 
 
@@ -153,12 +152,7 @@ def cargar_datos(path_carpeta : str):
             valores = [tuple(fila_valores) for fila_valores in data_reader.values] 
             columnas = ', '.join(data_reader.columns)
             placeholders = ', '.join(['%s'] * len(data_reader.columns)) 
-            query = f"INSERT INTO {nombre_tabla}({columnas}) VALUES ({placeholders})"
-                #Generación de query
-                valores = list(data_reader.to_records(index=False)) #Hace tupla (para psycopg2) cada fila de valores (arrays) en el dataset.
-                columnas = ', '.join(data_reader.columns)
-                placeholders = ', '.join(['%s'] * len(data_reader.columns)) #Pasa tantos valores como columnas
-                query = f"INSERT INTO {nombre_tabla} ({columnas}) VALUES ({placeholders})"
+            query = f"INSERT INTO {nombre_tabla}({columnas}) VALUES ({placeholders})
 
             try:
                 cursor.executemany(query, valores)
@@ -170,18 +164,7 @@ def cargar_datos(path_carpeta : str):
                 raise 
         
         conexion.commit()
-        print("Todas las tablas cargadas y la transacción completada.")
-
-                #Inserción
-                try:
-                    cursor.executemany(query, valores)
-                    fin_cronometro = time.time()
-                    conexion.commit()
-                    print(f"Se completó la carga de {num_filas} filas para la tabla {nombre_tabla}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
-                except Exception as e:
-                    conexion.rollback()
-                    print(f"Error al cargar datos para la tabla {nombre_tabla} desde {archivo}: {e}. Cambios revertidos")
-                
+        print("Todas las tablas cargadas y la transacción completada.")            
     except Exception as e:
         print(f"Error: {e}.")
         conexion.rollback()
