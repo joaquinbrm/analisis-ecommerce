@@ -3,8 +3,9 @@ import pandas as pd
 import os
 import time
 import dotenv
+import numpy as np
 
-#Credenciales de conexión
+# Credenciales de conexión
 dotenv.load_dotenv()
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
@@ -12,9 +13,41 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
 
+# Diccionario de columnas de timestamp por tabla
+columnas_timestamp = {
+    'order_all': [ 
+        'order_purchase_timestamp',
+        'order_approved_at',
+        'order_delivered_carrier_date',
+        'order_delivered_customer_date',
+        'order_estimated_delivery_date'
+    ],
+    'order_items': [
+        'shipping_limit_date'
+    ],
+    'order_reviews': [
+        'review_creation_date',
+        'review_answer_timestamp'
+    ]
+}
+
+prioridad_carga_tablas = [
+    'customers',
+    'sellers',
+    'products', # Si order_items también depende de products
+    'order_all',
+    'order_items',
+    'order_payments',
+    'order_reviews', 
+    'translations',  
+    'geolocation'      
+    # Agrega cualquier otra tabla que tengas en tu carpeta de CSVs
+]
+
+
 def conectar_db():
     """Conecta el script a la database.
-    
+        
         Notas: 
             - Utiliza el método connect de psycopg2. 
             - Modificar parámteros de conexión desde variables globales."""
@@ -48,42 +81,72 @@ def cargar_datos(path_carpeta : str):
         cursor = conexion.cursor()
         print("Conexión establecida.")
     
-        #Recorrer directorio parámetro
-        for root, directorios, archivos in os.walk(path_carpeta):
-            for archivo in archivos:
-                #Abrir archivo
-                nombre_tabla = os.path.splitext(archivo)[0]
-                path_archivo = os.path.join(root, archivo)
+        # Obtener una lista de todos los archivos CSV en la carpeta
+        archivos_en_carpeta = [f for f in os.listdir(path_carpeta) if f.endswith('.csv')]
+        print(f"Archivos CSV detectados en '{path_carpeta}': {archivos_en_carpeta}") # DEBUG
+        
+        # Crear un diccionario para acceder a los paths de los archivos por nombre de tabla
+        archivos_por_nombre_tabla = {os.path.splitext(f)[0]: os.path.join(path_carpeta, f) for f in archivos_en_carpeta}
+        print(f"Mapeo de nombres de tabla a rutas de archivo: {archivos_por_nombre_tabla}") # DEBUG
 
-                try:
-                    data_reader = pd.read_csv(path_archivo)
-                except Exception as e:
-                    print(f"Error al intentar leer el archivo {archivo}: {e}.")
+        # Recorrer las tablas en el orden de prioridad
+        for nombre_tabla in prioridad_carga_tablas:
+            print(f"\n--- Intentando procesar tabla: {nombre_tabla} ---") # DEBUG
+            if nombre_tabla not in archivos_por_nombre_tabla:
+                print(f"Advertencia: El archivo {nombre_tabla}.csv no se encontró en la carpeta. Saltando.")
+                continue
 
-                #Monitoreo
-                num_filas = len(data_reader)
-                inicio_cronometro = time.time() 
+            path_archivo = archivos_por_nombre_tabla[nombre_tabla]
+            archivo = os.path.basename(path_archivo) # Solo el nombre del archivo con extensión
 
-                #Generación de query
-                valores = [tuple(fila_valores) for fila_valores in data_reader.values] #Hace tupla (para psycopg2) cada fila de valores (arrays) en el dataset.
-                columnas = ', '.join(data_reader.columns)
-                placeholders = ', '.join(['%s'] * len(data_reader.columns)) #Pasa tantos valores como columnas
-                query = f"INSERT INTO {nombre_tabla} ({columnas}) VALUES ({placeholders})"
+            print(f"--- Procesando archivo: {archivo} ---")
 
-                try:
-                    cursor.executemany(query, valores)
-                    fin_cronometro = time.time()
-                    conexion.commit()
-                    print(f"Se completó la carga de {num_filas} filas para la tabla {nombre_tabla}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
-                except Exception as e:
-                    conexion.rollback()
-                    print(f"Error al cargar datos para la tabla {nombre_tabla} desde {archivo}: {e}. Cambios revertidos")
+            try:
+                data_reader = pd.read_csv(path_archivo)
                 
+                # Aplicar pre-procesamiento de timestamps si la tabla está en el diccionario
+                if nombre_tabla in columnas_timestamp:
+                    print(f"Pre-procesando columnas de timestamp para la tabla: {nombre_tabla}")
+                    for col_timestamp in columnas_timestamp[nombre_tabla]:
+                        if col_timestamp in data_reader.columns:
+                            data_reader[col_timestamp] = pd.to_datetime(
+                                data_reader[col_timestamp], errors='coerce'
+                            )
+                            data_reader[col_timestamp] = data_reader[col_timestamp].replace({pd.NaT: None})
+
+            except Exception as e:
+                print(f"Error al intentar leer o pre-procesar el archivo {archivo}: {e}.")
+                continue 
+
+            # Monitoreo
+            num_filas = len(data_reader)
+            inicio_cronometro = time.time() 
+
+            # Generación de query
+            valores = [tuple(fila_valores) for fila_valores in data_reader.values] 
+            columnas = ', '.join(data_reader.columns)
+            placeholders = ', '.join(['%s'] * len(data_reader.columns)) 
+            query = f"INSERT INTO {nombre_tabla}({columnas}) VALUES ({placeholders})"
+
+            try:
+                cursor.executemany(query, valores)
+                fin_cronometro = time.time()
+                print(f"Se completó la carga de {num_filas} filas para la tabla {nombre_tabla}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
+
+            except Exception as e:
+                print(f"Error al cargar datos para la tabla {nombre_tabla} desde {archivo}: {e}.")
+                raise 
+        
+        conexion.commit()
+        print("Todas las tablas cargadas y la transacción completada.")
+
     except Exception as e:
-        print(f"Error: {e}")  
+        print(f"Error: {e}.")
+        conexion.rollback()
+        print("Cambios revertidos.")
 
     finally:
-        #Cierre
+        # Cierre
         if cursor:
             cursor.close()
         if conexion:
