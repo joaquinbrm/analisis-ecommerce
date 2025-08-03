@@ -59,6 +59,19 @@ def conectar_db():
         password=DB_PASSWORD,
         port=DB_PORT)
 
+#Pandas lee como float las columnas que son timestamp. Se agrega el diccionario para evitar error de tipo.
+columnas_timestamp = { 'order': [
+        'order_purchase_timestamp',
+        'order_approved_at',
+        'order_delivered_carrier_date',
+        'order_delivered_customer_date',
+        'order_estimated_delivery_date'],
+                        'order_items': [
+        'shipping_limit_date'],
+                        'order_reviews' : [
+        'review_creation_date',
+        'review_answer_timestamp']}
+
 def cargar_datos(path_carpeta : str):
     """ Ingresa datos desde archivos csv a tablas en PostgreSQL.
 
@@ -117,6 +130,20 @@ def cargar_datos(path_carpeta : str):
             except Exception as e:
                 print(f"Error al intentar leer o pre-procesar el archivo {archivo}: {e}.")
                 continue 
+                try:
+                    data_reader = pd.read_csv(path_archivo)
+                except Exception as e:
+                    print(f"Error al intentar leer el archivo {archivo}: {e}.")
+                    continue
+                
+                #Conversión de tipo
+                if nombre_tabla in columnas_timestamp:
+                    print(f"Corrigiendo tipos para la tabla: {nombre_tabla}")
+                    for columna in columnas_timestamp[nombre_tabla]:
+                        if columna in data_reader.columns:
+                            data_reader[columna] = pd.to_datetime(data_reader[columna], errors='coerce')
+                        else:
+                            print(f" La columna '{columna}' no se encontró en '{archivo}'.")
 
             # Monitoreo
             num_filas = len(data_reader)
@@ -127,6 +154,11 @@ def cargar_datos(path_carpeta : str):
             columnas = ', '.join(data_reader.columns)
             placeholders = ', '.join(['%s'] * len(data_reader.columns)) 
             query = f"INSERT INTO {nombre_tabla}({columnas}) VALUES ({placeholders})"
+                #Generación de query
+                valores = list(data_reader.to_records(index=False)) #Hace tupla (para psycopg2) cada fila de valores (arrays) en el dataset.
+                columnas = ', '.join(data_reader.columns)
+                placeholders = ', '.join(['%s'] * len(data_reader.columns)) #Pasa tantos valores como columnas
+                query = f"INSERT INTO {nombre_tabla} ({columnas}) VALUES ({placeholders})"
 
             try:
                 cursor.executemany(query, valores)
@@ -140,6 +172,16 @@ def cargar_datos(path_carpeta : str):
         conexion.commit()
         print("Todas las tablas cargadas y la transacción completada.")
 
+                #Inserción
+                try:
+                    cursor.executemany(query, valores)
+                    fin_cronometro = time.time()
+                    conexion.commit()
+                    print(f"Se completó la carga de {num_filas} filas para la tabla {nombre_tabla}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
+                except Exception as e:
+                    conexion.rollback()
+                    print(f"Error al cargar datos para la tabla {nombre_tabla} desde {archivo}: {e}. Cambios revertidos")
+                
     except Exception as e:
         print(f"Error: {e}.")
         conexion.rollback()
