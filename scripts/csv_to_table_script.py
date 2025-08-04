@@ -93,56 +93,37 @@ def cargar_datos(path_carpeta : str):
         cursor = conexion.cursor()
         print("Conexión establecida.")
     
-        # Obtener una lista de todos los archivos CSV en la carpeta
+        # Listar csvs
         archivos_en_carpeta = [f for f in os.listdir(path_carpeta) if f.endswith('.csv')]
-        print(f"Archivos CSV detectados en '{path_carpeta}': {archivos_en_carpeta}") # DEBUG
+        print(f"Archivos CSV detectados en '{path_carpeta}': {archivos_en_carpeta}")
         
-        # Crear un diccionario para acceder a los paths de los archivos por nombre de tabla
+        # Diccionario de paths
         archivos_por_nombre_tabla = {os.path.splitext(f)[0]: os.path.join(path_carpeta, f) for f in archivos_en_carpeta}
-        print(f"Mapeo de nombres de tabla a rutas de archivo: {archivos_por_nombre_tabla}") # DEBUG
 
-        # Recorrer las tablas en el orden de prioridad
+        # Recorrer según prioridad
         for nombre_tabla in prioridad_carga_tablas:
-            print(f"\n--- Intentando procesar tabla: {nombre_tabla} ---") # DEBUG
             if nombre_tabla not in archivos_por_nombre_tabla:
-                print(f"Advertencia: El archivo {nombre_tabla}.csv no se encontró en la carpeta. Saltando.")
+                print(f"El archivo {nombre_tabla}.csv no se encontró en la carpeta. Salteando.")
                 continue
 
             path_archivo = archivos_por_nombre_tabla[nombre_tabla]
-            archivo = os.path.basename(path_archivo) # Solo el nombre del archivo con extensión
-
-            print(f"--- Procesando archivo: {archivo} ---")
+            archivo = os.path.basename(path_archivo) # Solo el nombre
 
             try:
+                #Lectura
                 data_reader = pd.read_csv(path_archivo)
                 
-                # Aplicar pre-procesamiento de timestamps si la tabla está en el diccionario
+                #Conversión de tipos
                 if nombre_tabla in columnas_timestamp:
                     print(f"Pre-procesando columnas de timestamp para la tabla: {nombre_tabla}")
                     for col_timestamp in columnas_timestamp[nombre_tabla]:
                         if col_timestamp in data_reader.columns:
-                            data_reader[col_timestamp] = pd.to_datetime(
-                                data_reader[col_timestamp], errors='coerce'
-                            )
+                            data_reader[col_timestamp] = pd.to_datetime(data_reader[col_timestamp], errors='coerce')
                             data_reader[col_timestamp] = data_reader[col_timestamp].replace({pd.NaT: None})
 
             except Exception as e:
-                print(f"Error al intentar leer o pre-procesar el archivo {archivo}: {e}.")
+                print(f"Error al intentar leer el archivo {archivo}: {e}.")
                 continue 
-                try:
-                    data_reader = pd.read_csv(path_archivo)
-                except Exception as e:
-                    print(f"Error al intentar leer el archivo {archivo}: {e}.")
-                    continue
-                
-                #Conversión de tipo
-                if nombre_tabla in columnas_timestamp:
-                    print(f"Corrigiendo tipos para la tabla: {nombre_tabla}")
-                    for columna in columnas_timestamp[nombre_tabla]:
-                        if columna in data_reader.columns:
-                            data_reader[columna] = pd.to_datetime(data_reader[columna], errors='coerce')
-                        else:
-                            print(f" La columna '{columna}' no se encontró en '{archivo}'.")
 
             # Monitoreo
             num_filas = len(data_reader)
@@ -152,9 +133,10 @@ def cargar_datos(path_carpeta : str):
             valores = [tuple(fila_valores) for fila_valores in data_reader.values] 
             columnas = ', '.join(data_reader.columns)
             placeholders = ', '.join(['%s'] * len(data_reader.columns)) 
-            query = f"INSERT INTO {nombre_tabla}({columnas}) VALUES ({placeholders})
+            query = f"INSERT INTO {nombre_tabla}({columnas}) VALUES ({placeholders})"
 
             try:
+                #Carga
                 cursor.executemany(query, valores)
                 fin_cronometro = time.time()
                 print(f"Se completó la carga de {num_filas} filas para la tabla {nombre_tabla}, tardando {(fin_cronometro-inicio_cronometro)} segundos.")
@@ -164,7 +146,7 @@ def cargar_datos(path_carpeta : str):
                 raise 
         
         conexion.commit()
-        print("Todas las tablas cargadas y la transacción completada.")            
+
     except Exception as e:
         print(f"Error: {e}.")
         conexion.rollback()
