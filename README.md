@@ -8,18 +8,18 @@ Este proyecto analiza un dataset de 100k pedidos del marketplace brasileño Olis
 ### 1. Categorías con Mayores Ingresos
  **Health & Beauty** (Salud y Belleza), **Watches** (Relojes) y **Bed/Bath/Table** (Cama, Mesa y Baño) son los principales generadores de ingresos.
 
-![Top 15 Categorías por Ingresos](images/revenue_chart.png)
+![Top 15 Categorías por Ingresos](images/rentabilidad_por_categoria.png)
 *(Top 15 categorías por ingresos totales en Millones de BRL)*
 
 ### 2. Demografía
 La región Sureste supera ampliamente al resto. **São Paulo (SP)** representa la mayor parte de los pedidos, seguido por Río de Janeiro (RJ) y Minas Gerais (MG).
 
-![Distribución de Clientes por Estado](images/customer_dist_chart.png)
+![Distribución de Clientes por Estado](images/clientes_por_estad.png)
 
 ### 3. Valor Económico por Región (Ticket Promedio)
 La relación aparentemente inversa entre cantidad de pedidos por región y el precio promedio indica un comportamiento de grandes compras en un mismo envío en regiones más aisladas.
 
-![Ticket Promedio por Estado](images/avg_ticket_chart.png)
+![Ticket Promedio por Estado](images/valor_pedido_por_estado.png)
 
 
 ##  Tecnologías y Herramientas
