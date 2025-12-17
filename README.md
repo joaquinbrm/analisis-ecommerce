@@ -2,7 +2,6 @@
 
 ## Descripción del Proyecto
 Este proyecto analiza un dataset de 100k pedidos del marketplace brasileño Olist para revelar insights sobre la rentabilidad de productos, la demografía de los clientes y el rendimiento de ventas regional.
-Como producción final, desarrollé el siguiente dashboard: lookerstudio.google.com/reporting/3adb6b2c-54e7-46c6-a49a-4ca00882a2df. 
 
 ## Gráficos
 
@@ -22,8 +21,8 @@ La relación aparentemente inversa entre cantidad de pedidos por región y el pr
 
 ![Ticket Promedio por Estado](images/valor_pedido_por_estado.png)
 
-### 4. Dashboard final
-Apliqué la información para crear un dashboard en el que filtrar fácilmente por categoría y ver los resultados en un Heatmap.
+## Dashboard
+Apliqué la información para crear un dashboard (disponible **[aquí](lookerstudio.google.com/reporting/3adb6b2c-54e7-46c6-a49a-4ca00882a2df. ) en el que filtrar fácilmente por categoría y ver los resultados en un Heatmap.
 
 ![Gif presentación dashboard](images/dashboard.gif)
 
