@@ -22,7 +22,7 @@ La relación aparentemente inversa entre cantidad de pedidos por región y el pr
 ![Ticket Promedio por Estado](images/valor_pedido_por_estado.png)
 
 ## Dashboard
-Apliqué la información para crear un dashboard (disponible **[aquí](lookerstudio.google.com/reporting/3adb6b2c-54e7-46c6-a49a-4ca00882a2df. ) en el que filtrar fácilmente por categoría y ver los resultados en un Heatmap.
+Usé esta información para crear un dashboard (disponible [aquí](lookerstudio.google.com/reporting/3adb6b2c-54e7-46c6-a49a-4ca00882a2df. )) en el que filtrar fácilmente por categoría y ver los resultados en un Heatmap.
 
 ![Gif presentación dashboard](images/dashboard.gif)
 
