@@ -9,7 +9,6 @@ Este proyecto analiza un dataset de 100k pedidos del marketplace brasileño Olis
  **Health & Beauty** (Salud y Belleza), **Watches** (Relojes) y **Bed/Bath/Table** (Cama, Mesa y Baño) son los principales generadores de ingresos.
 
 ![Top 15 Categorías por Ingresos](images/rentabilidad_por_categoria.png)
-*(Top 15 categorías por ingresos totales en Millones de BRL)*
 
 ### 2. Demografía
 La región Sureste supera ampliamente al resto. **São Paulo (SP)** representa la mayor parte de los pedidos, seguido por Río de Janeiro (RJ) y Minas Gerais (MG).
