@@ -25,6 +25,22 @@ Usé esta información para crear un dashboard (disponible [aquí](https://looke
 
 ![Gif presentación dashboard](images/dashboard.gif)
 
+## Insights y Recomendaciones Estratégicas
+
+Tras el análisis técnico de los 100.000 pedidos, se identificó una oportunidad crítica de crecimiento basada en el comportamiento geográfico del consumidor:
+
+### 1. La detección de Regiones de Alto Valor
+Mientras que **São Paulo (SP)** lidera en volumen de ventas, estados como **Paraíba (PB)**, **Amapá (AP)** y **Acre (AC)** presentan el **ticket promedio más alto de la plataforma**, superando los 200 BRL. 
+
+* **Insight:** El cliente en regiones aisladas no compra menos por falta de interés, sino que agrupa sus compras en pedidos grandes para diluir el costo de envío. Estamos perdiendo la recurrencia de compras pequeñas debido a la barrera logística.
+
+### 2. Propuesta de Acción
+Para capitalizar en esta demanda se recomienda:
+
+* **Validación mediante Datos Primarios:** Lanzar encuestas regionales en los estados con mayor ticket promedio (PB, AP, AC) para confirmar si el costo de envío es el principal inhibidor de compras más frecuentes.
+* **Programa de Membresía:** Implementar una membresía de "Envío Bonificado" para zonas alejadas, incentivando la compra de bajo ticket y alta frecuencia.
+* **Optimización de Red Logística:** Evaluar la factibilidad de un centro de distribución secundario en la región Norte/Nordeste para reducir tiempos de entrega y costos operativos a largo plazo.
+
 ##  Tecnologías y Herramientas
 
 * **SQL:** Utilizado para la extracción de datos complejos.
